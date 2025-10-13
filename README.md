@@ -42,8 +42,8 @@ A comprehensive energy monitoring system that supports multiple sites and arbitr
 │   (Real/Sim)    │    │   Broker     │    │   (Python)      │
 └─────────────────┘    └──────────────┘    └─────────────────┘
                                                       │
-                       ┌─────────────────┐           │
-                       │   Next.js UI    │◀──────────┘
+                       ┌─────────────────┐            │
+                       │   Next.js UI    │◀────────── ┘
                        │   (React/TS)    │
                        └─────────────────┘
                                 │
