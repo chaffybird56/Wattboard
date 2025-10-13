@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="/static/css/styles.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <header>
+      <h1>Home Energy Monitoring</h1>
+      <p class="subtitle">MV/LV Load Profiling & Peak-Demand Trends</p>
+    </header>
+
+    <main class="container">
+      <section>
+        <h2>Feeder Load (kW) — last 24h</h2>
+        <canvas id="kwChart"></canvas>
+        <div id="peakBox" class="info"></div>
+      </section>
+
+      <section>
+        <h2>Voltage (V) — average across meters</h2>
+        <canvas id="voltsChart"></canvas>
+      </section>
+
+      <section>
+        <h2>Daily Summaries (last 14 days)</h2>
+        <canvas id="dailyKwhChart"></canvas>
+      </section>
+    </main>
+
+    <footer>
+      <small>Demo utility dashboard. Data via MQTT → Flask → SQLite. Charts by Chart.js.</small>
+    </footer>
+
+    <script src="/static/js/dashboard.js"></script>
+  </body>
+</html>

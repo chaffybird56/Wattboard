@@ -1,0 +1,17 @@
+alarms:
+  - id: peak_kw_exceeded
+    description: "Feeder peak demand exceeded planning threshold"
+    level: warning
+    condition:
+      metric: feeder_kw
+      comparator: ">"
+      threshold: 2500
+      window_minutes: 15
+  - id: data_gap_detected
+    description: "Data gap > 10 minutes on any meter"
+    level: critical
+    condition:
+      metric: data_gap_minutes
+      comparator: ">"
+      threshold: 10
+      window_minutes: 15

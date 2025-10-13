@@ -1,0 +1,17 @@
+site:
+  title: Home Energy Monitoring
+  utility_name: Demo Utility
+  timezone: America/Toronto
+
+ingest:
+  accept_out_of_order_seconds: 120
+
+rollups:
+  daily_time: "00:05"  # HH:MM local
+  hourly_window_minutes: 60
+
+quality:
+  max_missing_percent_per_hour: 20  # trigger dq flag
+
+ui:
+  default_window_hours: 24

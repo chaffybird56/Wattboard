@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wattboard - Energy Monitoring Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        dark: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    },
+                    fontFamily: {
+                        'inter': ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-slow': 'bounce 2s infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+        }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .glass-strong {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(59, 130, 246, 0.05));
+            border: 1px solid rgba(14, 165, 233, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(14, 165, 233, 0.1), 0 10px 10px -5px rgba(14, 165, 233, 0.04);
+        }
+        
+        .loading-shimmer {
+            background: linear-gradient(90deg, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.1) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        .status-indicator {
+            position: relative;
+        }
+        
+        .status-indicator::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse-slow 2s infinite;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+        }
+        
+        .floating-action {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 50;
+            background: linear-gradient(135deg, #0ea5e9, #3b82f6);
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px -5px rgba(14, 165, 233, 0.4);
+            transition: all 0.3s ease;
+        }
+        
+        .floating-action:hover {
+            transform: scale(1.1);
+            box-shadow: 0 20px 35px -5px rgba(14, 165, 233, 0.5);
+        }
+
+        /* Animated Particles */
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: linear-gradient(45deg, #3b82f6, #8b5cf6);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .particle:nth-child(1) {
+            top: 20%;
+            left: 20%;
+            animation-delay: 0s;
+            animation-duration: 8s;
+        }
+
+        .particle:nth-child(2) {
+            top: 60%;
+            left: 80%;
+            animation-delay: 2s;
+            animation-duration: 6s;
+        }
+
+        .particle:nth-child(3) {
+            top: 80%;
+            left: 40%;
+            animation-delay: 4s;
+            animation-duration: 10s;
+        }
+
+        .particle:nth-child(4) {
+            top: 30%;
+            left: 70%;
+            animation-delay: 1s;
+            animation-duration: 7s;
+        }
+
+        .particle:nth-child(5) {
+            top: 70%;
+            left: 10%;
+            animation-delay: 3s;
+            animation-duration: 9s;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px) translateX(0px);
+                opacity: 0.3;
+            }
+            25% {
+                transform: translateY(-20px) translateX(10px);
+                opacity: 0.6;
+            }
+            50% {
+                transform: translateY(-10px) translateX(-15px);
+                opacity: 0.4;
+            }
+            75% {
+                transform: translateY(-30px) translateX(5px);
+                opacity: 0.7;
+            }
+        }
+        
+    </style>
+</head>
+<body class="text-white">
+    
+
+    <!-- Header -->
+    <header class="relative overflow-hidden">
+        <!-- Animated Background -->
+        <div class="absolute inset-0 bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900"></div>
+        <div class="absolute inset-0 bg-gradient-to-br from-transparent via-blue-500/10 to-purple-600/20"></div>
+        
+        <!-- Animated Particles -->
+        <div class="absolute inset-0 opacity-20">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+        </div>
+        
+        <!-- Header Content -->
+        <div class="relative glass-strong border-b border-white/20 backdrop-blur-xl sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-20">
+                    <!-- Logo and Title -->
+                    <div class="flex items-center space-x-6">
+                        <div class="relative">
+                            <div class="w-12 h-12 bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-500/25">
+                                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                            </div>
+                            <div class="absolute -inset-1 bg-gradient-to-r from-cyan-400 to-purple-600 rounded-2xl blur opacity-30 animate-pulse"></div>
+                        </div>
+                        <div>
+                            <h1 class="text-2xl font-bold bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
+                                Wattboard
+                            </h1>
+                            <p class="text-sm text-blue-200/80 font-medium">Real-time Energy Intelligence</p>
+                        </div>
+                        
+                        <!-- Site Switcher -->
+                        <div class="hidden md:block">
+                            <div class="relative group">
+                                <div class="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl blur opacity-25 group-hover:opacity-40 transition duration-300"></div>
+                                <select id="siteSelect" class="relative glass px-5 py-2 rounded-xl text-white border-0 focus:ring-2 focus:ring-cyan-400 bg-white/15 backdrop-blur-sm appearance-none pr-8 font-medium transition-all duration-200 hover:bg-white/20">
+                                    <option value="">Loading sites...</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                    <svg class="w-4 h-4 text-cyan-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex items-center space-x-4">
+                        <!-- Demo Toggle -->
+                        <button id="demoToggle" class="group relative flex items-center space-x-2 px-5 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 rounded-xl text-white font-semibold transition-all duration-300 shadow-lg shadow-green-500/25 hover:shadow-green-500/40 hover:scale-105">
+                            <div class="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                            <span>Demo Mode</span>
+                            <div class="absolute -inset-1 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl blur opacity-30 group-hover:opacity-50 transition duration-300"></div>
+                        </button>
+                        
+                        <!-- Export Button -->
+                        <button id="exportBtn" class="group relative flex items-center space-x-2 px-5 py-2 glass hover:bg-white/25 rounded-xl text-white font-medium transition-all duration-300 hover:scale-105 backdrop-blur-sm">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <span>Export</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Demo Banner -->
+    <div id="demoBanner" class="bg-gradient-to-r from-green-500/20 to-blue-500/20 border-b border-green-500/30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                        <h3 class="font-semibold text-white">Demo Mode Active</h3>
+                    </div>
+                    <p class="text-sm text-gray-300">Viewing realistic simulated data from multiple devices</p>
+                </div>
+                <button id="stopDemo" class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium text-white transition-all duration-200">
+                    Stop Demo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="metric-card rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-300">Current Power</h3>
+                            <p class="text-xs text-gray-400">Real-time consumption</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-1 text-xs text-green-400">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span>5.2%</span>
+                    </div>
+                </div>
+                <div class="flex items-baseline space-x-2">
+                    <span class="text-3xl font-bold text-white" id="currentPower">0</span>
+                    <span class="text-sm text-gray-400">W</span>
+                </div>
+            </div>
+
+            <div class="metric-card rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-300">24h Energy</h3>
+                            <p class="text-xs text-gray-400">Daily consumption</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-1 text-xs text-green-400">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span>2.1%</span>
+                    </div>
+                </div>
+                <div class="flex items-baseline space-x-2">
+                    <span class="text-3xl font-bold text-white" id="dailyEnergy">0</span>
+                    <span class="text-sm text-gray-400">kWh</span>
+                </div>
+            </div>
+
+            <div class="metric-card rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-300">Peak Today</h3>
+                            <p class="text-xs text-gray-400">Maximum load</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-1 text-xs text-red-400">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l2.293-2.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span>8.7%</span>
+                    </div>
+                </div>
+                <div class="flex items-baseline space-x-2">
+                    <span class="text-3xl font-bold text-white" id="peakToday">0</span>
+                    <span class="text-sm text-gray-400">W</span>
+                </div>
+            </div>
+
+            <div class="metric-card rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-300">Cost Est.</h3>
+                            <p class="text-xs text-gray-400">Daily estimate</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-1 text-xs text-green-400">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span>1.3%</span>
+                    </div>
+                </div>
+                <div class="flex items-baseline space-x-2">
+                    <span class="text-3xl font-bold text-white" id="costEst">$0.00</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Chart Section -->
+            <div class="lg:col-span-2">
+                <div class="glass-strong rounded-2xl p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-bold text-white">Live Timeline</h2>
+                                <p class="text-sm text-gray-400" id="chartSubtitle">Real-time energy consumption</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4">
+                            <select id="metricSelect" class="glass px-3 py-2 rounded-lg text-white border-0 focus:ring-2 focus:ring-blue-500 bg-white/10">
+                                <option value="power">Power (W)</option>
+                                <option value="voltage">Voltage (V)</option>
+                                <option value="temp">Temperature (°C)</option>
+                            </select>
+                            
+                            <div class="flex space-x-1">
+                                <button onclick="setTimeRange('1h')" class="time-range-btn px-3 py-1 rounded-lg text-sm font-medium bg-blue-500 text-white" data-range="1h">1h</button>
+                                <button onclick="setTimeRange('6h')" class="time-range-btn px-3 py-1 rounded-lg text-sm font-medium glass hover:bg-white/20 text-white transition-all duration-200" data-range="6h">6h</button>
+                                <button onclick="setTimeRange('24h')" class="time-range-btn px-3 py-1 rounded-lg text-sm font-medium glass hover:bg-white/20 text-white transition-all duration-200" data-range="24h">24h</button>
+                                <button onclick="setTimeRange('7d')" class="time-range-btn px-3 py-1 rounded-lg text-sm font-medium glass hover:bg-white/20 text-white transition-all duration-200" data-range="7d">7d</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="timelineChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Device Panel -->
+            <div class="lg:col-span-1">
+                <div class="glass-strong rounded-2xl p-6">
+                    <div class="flex items-center space-x-3 mb-6">
+                        <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-white">Devices</h3>
+                            <p class="text-sm text-gray-400">Connected sensors</p>
+                        </div>
+                    </div>
+                    
+                    <div id="deviceList" class="space-y-3 max-h-96 overflow-y-auto">
+                        <div class="text-center py-8 text-gray-400">
+                            <div class="loading-shimmer w-12 h-12 mx-auto mb-3 rounded-full"></div>
+                            <p class="text-sm">Loading devices...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Sources Panel - Horizontal Layout -->
+        <div class="mt-8">
+            <div class="glass-strong rounded-2xl p-6">
+                <div class="flex items-center space-x-3 mb-6">
+                    <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-white">Data Sources & Analytics</h3>
+                        <p class="text-sm text-gray-400">Calculation methods, export options & system status</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Current Data Status -->
+                    <div class="glass rounded-xl p-4">
+                        <h4 class="font-semibold text-white mb-3 flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                            <span>Live Status</span>
+                        </h4>
+                        <div id="dataSources" class="space-y-2 text-sm text-gray-300">
+                            <div class="loading-shimmer h-3 rounded"></div>
+                            <div class="loading-shimmer h-3 rounded"></div>
+                            <div class="loading-shimmer h-3 rounded"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Calculation Methods -->
+                    <div class="glass rounded-xl p-4">
+                        <h4 class="font-semibold text-white mb-3 flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
+                            <span>Calculations</span>
+                        </h4>
+                        <div class="space-y-2 text-sm text-gray-300">
+                            <div class="flex justify-between items-center">
+                                <span class="text-white">Power</span>
+                                <span class="text-blue-400 text-xs">Direct</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-white">Energy</span>
+                                <span class="text-green-400 text-xs">kWh</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-white">Peak</span>
+                                <span class="text-yellow-400 text-xs">Max</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-white">Cost</span>
+                                <span class="text-purple-400 text-xs">$0.15</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Export Options -->
+                    <div class="glass rounded-xl p-4">
+                        <h4 class="font-semibold text-white mb-3 flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-orange-400 rounded-full"></div>
+                            <span>Export Data</span>
+                        </h4>
+                        <div class="space-y-2">
+                            <button onclick="exportData('csv')" class="w-full px-3 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white text-sm transition-colors flex items-center justify-center space-x-2">
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                </svg>
+                                <span>CSV Export</span>
+                            </button>
+                            <button onclick="exportData('json')" class="w-full px-3 py-2 bg-green-500 hover:bg-green-600 rounded-lg text-white text-sm transition-colors flex items-center justify-center space-x-2">
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+                                </svg>
+                                <span>JSON Export</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- System Info -->
+                    <div class="glass rounded-xl p-4">
+                        <h4 class="font-semibold text-white mb-3 flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-cyan-400 rounded-full"></div>
+                            <span>System Info</span>
+                        </h4>
+                        <div class="space-y-2 text-sm text-gray-300">
+                            <div class="flex justify-between items-center">
+                                <span>Refresh</span>
+                                <span class="text-white">5s</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>Resolution</span>
+                                <span class="text-white">1min</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>Mode</span>
+                                <span class="text-yellow-400">Demo</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>Status</span>
+                                <span class="text-green-400">Live</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Floating Action Button -->
+    <div class="floating-action" id="refreshBtn" title="Refresh Data">
+        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+        </svg>
+    </div>
+
+    <script>
+        // Global state
+        let currentSiteId = null;
+        let selectedDevices = [];
+        let demoMode = false;
+        let chart = null;
+        let currentTimeRange = '1h';
+        let currentMetric = 'power';
+        let refreshInterval = null;
+
+        // API base URL
+        const API_BASE = 'http://localhost:5000/api';
+
+        // Initialize the application
+        async function init() {
+            console.log('Initializing Wattboard...');
+            await loadSites();
+            await loadDevices();
+            await loadMetrics();
+            setupEventListeners();
+            startDemoMode();
+            startAutoRefresh();
+        }
+
+        // Load sites
+        async function loadSites() {
+            try {
+                console.log('Loading sites...');
+                const response = await fetch(`${API_BASE}/sites`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const sites = await response.json();
+                console.log('Sites loaded:', sites);
+                
+                const siteSelect = document.getElementById('siteSelect');
+                siteSelect.innerHTML = '';
+                
+                sites.forEach(site => {
+                    const option = document.createElement('option');
+                    option.value = site.id;
+                    option.textContent = site.name;
+                    siteSelect.appendChild(option);
+                });
+                
+                if (sites.length > 0) {
+                    currentSiteId = sites[0].id;
+                    siteSelect.value = currentSiteId;
+                }
+            } catch (error) {
+                console.error('Failed to load sites:', error);
+                showError('Failed to load sites. Please check if the API is running.');
+            }
+        }
+
+        // Load devices
+        async function loadDevices() {
+            if (!currentSiteId) return;
+            
+            try {
+                console.log('Loading devices for site:', currentSiteId);
+                const response = await fetch(`${API_BASE}/devices?site_id=${currentSiteId}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const devices = await response.json();
+                console.log('Devices loaded:', devices);
+                
+                const deviceList = document.getElementById('deviceList');
+                deviceList.innerHTML = '';
+                
+                if (devices.length === 0) {
+                    deviceList.innerHTML = `
+                        <div class="text-center py-8 text-gray-400">
+                            <svg class="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                            </svg>
+                            <p class="text-sm">No devices found</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                devices.forEach(device => {
+                    const deviceElement = document.createElement('div');
+                    deviceElement.className = 'glass p-4 rounded-xl cursor-pointer hover:bg-white/10 transition-all duration-200 border border-white/10';
+                    deviceElement.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-3 mb-2">
+                                    <h4 class="font-semibold text-white">${device.name}</h4>
+                                    <div class="status-indicator w-3 h-3 bg-green-400 rounded-full"></div>
+                                </div>
+                                <div class="text-sm text-gray-400">
+                                    ${device.type} • ${device.unit}
+                                </div>
+                            </div>
+                            <div class="w-6 h-6 rounded-lg bg-blue-500 flex items-center justify-center">
+                                <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    `;
+                    
+                    deviceElement.addEventListener('click', () => {
+                        toggleDevice(device.id, deviceElement);
+                    });
+                    
+                    deviceList.appendChild(deviceElement);
+                    selectedDevices.push(device.id);
+                });
+            } catch (error) {
+                console.error('Failed to load devices:', error);
+                showError('Failed to load devices. Please check your connection.');
+            }
+        }
+
+        // Toggle device selection
+        function toggleDevice(deviceId, element) {
+            const index = selectedDevices.indexOf(deviceId);
+            if (index > -1) {
+                selectedDevices.splice(index, 1);
+                element.classList.remove('bg-blue-500/20', 'border-blue-500/50');
+                element.classList.add('glass', 'border-white/10');
+                element.querySelector('.w-6.h-6').classList.remove('bg-blue-500');
+                element.querySelector('.w-6.h-6').classList.add('bg-gray-600');
+            } else {
+                selectedDevices.push(deviceId);
+                element.classList.add('bg-blue-500/20', 'border-blue-500/50');
+                element.classList.remove('glass', 'border-white/10');
+                element.querySelector('.w-6.h-6').classList.add('bg-blue-500');
+                element.querySelector('.w-6.h-6').classList.remove('bg-gray-600');
+            }
+            
+            loadMetrics();
+        }
+
+        // Load metrics and update chart
+        async function loadMetrics() {
+            if (!currentSiteId || selectedDevices.length === 0) {
+                console.log('No site or devices selected');
+                return;
+            }
+            
+            try {
+                console.log('Loading metrics...', { currentMetric, currentTimeRange });
+                
+                // Calculate time range
+                const now = new Date();
+                const fromTime = new Date(now.getTime() - getTimeRangeMs(currentTimeRange));
+                
+                const deviceIds = selectedDevices.join(',');
+                const url = `${API_BASE}/metrics?site_id=${currentSiteId}&device_id=${deviceIds}&key=${currentMetric}&res=1m&from=${fromTime.toISOString()}&to=${now.toISOString()}`;
+                
+                console.log('Fetching:', url);
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                console.log('Metrics loaded:', data);
+                
+                if (data.series && data.series.length > 0) {
+                    updateChart(data);
+                    updateKPIs(data);
+                    updateDataSources(data);
+                } else {
+                    console.log('No metrics data available');
+                    showEmptyChart();
+                }
+            } catch (error) {
+                console.error('Failed to load metrics:', error);
+                showError('Failed to load metrics data.');
+            }
+        }
+
+        // Get time range in milliseconds
+        function getTimeRangeMs(range) {
+            switch (range) {
+                case '1h': return 60 * 60 * 1000;
+                case '6h': return 6 * 60 * 60 * 1000;
+                case '24h': return 24 * 60 * 60 * 1000;
+                case '7d': return 7 * 24 * 60 * 60 * 1000;
+                default: return 60 * 60 * 1000;
+            }
+        }
+
+        // Set time range
+        function setTimeRange(range) {
+            currentTimeRange = range;
+            
+            // Update button styles
+            document.querySelectorAll('.time-range-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-500', 'text-white');
+                btn.classList.add('glass', 'hover:bg-white/20', 'text-white');
+            });
+            
+            const activeBtn = document.querySelector(`[data-range="${range}"]`);
+            activeBtn.classList.add('bg-blue-500', 'text-white');
+            activeBtn.classList.remove('glass', 'hover:bg-white/20');
+            
+            loadMetrics();
+        }
+
+        // Update chart
+        function updateChart(data) {
+            const ctx = document.getElementById('timelineChart').getContext('2d');
+            
+            if (chart) {
+                chart.destroy();
+            }
+            
+            const labels = data.series.map(point => new Date(point.t));
+            const values = data.series.map(point => point.value);
+            
+            const metricConfig = getMetricConfig(currentMetric);
+            
+            // Calculate dynamic scaling for better visualization
+            let yAxisMin, yAxisMax;
+            if (values.length > 0) {
+                const min = Math.min(...values);
+                const max = Math.max(...values);
+                const range = max - min;
+                const padding = range * 0.15; // 15% padding for better visualization
+                
+                yAxisMin = Math.max(0, min - padding); // Don't go below 0 for power/voltage
+                yAxisMax = max + padding;
+                
+                // For very stable data (small range), add more padding to show stability
+                if (range < max * 0.1) {
+                    const centerValue = (min + max) / 2;
+                    const expandedRange = max * 0.2; // 20% of max value
+                    yAxisMin = Math.max(0, centerValue - expandedRange);
+                    yAxisMax = centerValue + expandedRange;
+                }
+            } else {
+                yAxisMin = 0;
+                yAxisMax = 100;
+            }
+            
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: `${metricConfig.name} (${metricConfig.unit})`,
+                        data: values,
+                        borderColor: metricConfig.color,
+                        backgroundColor: metricConfig.bgColor,
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        pointHoverBackgroundColor: metricConfig.color,
+                        pointHoverBorderColor: '#ffffff',
+                        pointHoverBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                displayFormats: {
+                                    minute: 'HH:mm',
+                                    hour: 'HH:mm',
+                                    day: 'MMM dd'
+                                }
+                            },
+                            ticks: {
+                                color: '#9ca3af',
+                                font: {
+                                    family: 'Inter'
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)',
+                                drawBorder: false
+                            }
+                        },
+                        y: {
+                            min: yAxisMin,
+                            max: yAxisMax,
+                            ticks: {
+                                color: '#9ca3af',
+                                font: {
+                                    family: 'Inter'
+                                },
+                                callback: function(value) {
+                                    return value.toFixed(1) + metricConfig.unit;
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)',
+                                drawBorder: false
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+            
+            // Update chart subtitle
+            document.getElementById('chartSubtitle').textContent = `Real-time ${metricConfig.name.toLowerCase()} monitoring`;
+        }
+
+        // Get metric configuration
+        function getMetricConfig(metric) {
+            const configs = {
+                'power': { name: 'Power', unit: 'W', color: '#0ea5e9', bgColor: 'rgba(14, 165, 233, 0.1)' },
+                'voltage': { name: 'Voltage', unit: 'V', color: '#10b981', bgColor: 'rgba(16, 185, 129, 0.1)' },
+                'temp': { name: 'Temperature', unit: '°C', color: '#f59e0b', bgColor: 'rgba(245, 158, 11, 0.1)' },
+                'temperature': { name: 'Temperature', unit: '°C', color: '#f59e0b', bgColor: 'rgba(245, 158, 11, 0.1)' }
+            };
+            return configs[metric] || configs['power'];
+        }
+
+        // Show empty chart state
+        function showEmptyChart() {
+            const ctx = document.getElementById('timelineChart').getContext('2d');
+            
+            if (chart) {
+                chart.destroy();
+            }
+            
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            ctx.fillStyle = '#6b7280';
+            ctx.font = '16px Inter';
+            ctx.textAlign = 'center';
+            ctx.fillText('No data available', ctx.canvas.width / 2, ctx.canvas.height / 2);
+        }
+
+        // Update KPI cards
+        function updateKPIs(data) {
+            if (!data.series || data.series.length === 0) return;
+            
+            const values = data.series.map(point => point.value);
+            const current = values[values.length - 1] || 0;
+            const peak = Math.max(...values);
+            const avg = values.reduce((a, b) => a + b, 0) / values.length;
+            
+            document.getElementById('currentPower').textContent = Math.round(current);
+            document.getElementById('dailyEnergy').textContent = (avg * 24 / 1000).toFixed(1);
+            document.getElementById('peakToday').textContent = Math.round(peak);
+            document.getElementById('costEst').textContent = `$${((avg * 24 / 1000) * 0.15).toFixed(2)}`;
+        }
+
+        // Update data sources in sources panel
+        function updateDataSources(data) {
+            const sourcesDiv = document.getElementById('dataSources');
+            if (data.series && data.series.length > 0) {
+                const deviceCount = new Set(data.series.map(point => point.device_id)).size;
+                const timeRange = data.series.length;
+                const lastUpdate = new Date().toLocaleTimeString();
+                
+                sourcesDiv.innerHTML = `
+                    <div>• <strong class="text-white">${deviceCount} devices</strong> reporting data</div>
+                    <div>• <strong class="text-white">${timeRange} data points</strong> in current view</div>
+                    <div>• <strong class="text-white">Last update:</strong> ${lastUpdate}</div>
+                    <div>• <strong class="text-white">Metric:</strong> ${currentMetric} (${getMetricConfig(currentMetric).unit})</div>
+                    <div>• <strong class="text-white">Time range:</strong> ${currentTimeRange}</div>
+                `;
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            document.getElementById('siteSelect').addEventListener('change', (e) => {
+                currentSiteId = e.target.value;
+                selectedDevices = [];
+                loadDevices();
+            });
+            
+            document.getElementById('demoToggle').addEventListener('click', toggleDemoMode);
+            document.getElementById('stopDemo').addEventListener('click', toggleDemoMode);
+            
+            document.getElementById('metricSelect').addEventListener('change', (e) => {
+                currentMetric = e.target.value;
+                loadMetrics();
+            });
+            
+            document.getElementById('refreshBtn').addEventListener('click', () => {
+                loadMetrics();
+                // Add rotation animation
+                document.getElementById('refreshBtn').style.transform = 'rotate(360deg)';
+                setTimeout(() => {
+                    document.getElementById('refreshBtn').style.transform = 'rotate(0deg)';
+                }, 500);
+            });
+        }
+
+        // Toggle demo mode
+        async function toggleDemoMode() {
+            demoMode = !demoMode;
+            
+            const banner = document.getElementById('demoBanner');
+            const button = document.getElementById('demoToggle');
+            
+            if (demoMode) {
+                banner.classList.remove('hidden');
+                button.innerHTML = `
+                    <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    <span>Live Mode</span>
+                `;
+                button.classList.add('bg-green-500/20', 'border-green-500/50');
+                button.classList.remove('glass');
+                
+                try {
+                    await fetch(`${API_BASE}/demo/toggle`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ enabled: true })
+                    });
+                } catch (error) {
+                    console.error('Failed to start demo mode:', error);
+                }
+            } else {
+                banner.classList.add('hidden');
+                button.innerHTML = `
+                    <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
+                    <span>Demo Mode</span>
+                `;
+                button.classList.remove('bg-green-500/20', 'border-green-500/50');
+                button.classList.add('glass');
+                
+                try {
+                    await fetch(`${API_BASE}/demo/toggle`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ enabled: false })
+                    });
+                } catch (error) {
+                    console.error('Failed to stop demo mode:', error);
+                }
+            }
+        }
+
+        // Start demo mode automatically
+        function startDemoMode() {
+            setTimeout(() => {
+                if (!demoMode) {
+                    toggleDemoMode();
+                }
+            }, 2000);
+        }
+
+        // Start auto-refresh
+        function startAutoRefresh() {
+            // Clear any existing interval
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+            }
+            
+            // Refresh every 5 seconds for truly live updates
+            refreshInterval = setInterval(() => {
+                if (currentSiteId && selectedDevices.length > 0) {
+                    loadMetrics();
+                }
+            }, 5000);
+        }
+
+        // Show error message
+        function showError(message) {
+            // Create a toast notification
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 5000);
+        }
+
+
+        // Export functions
+        async function exportData(format) {
+            try {
+                const now = new Date();
+                const fromTime = new Date(now.getTime() - getTimeRangeMs(currentTimeRange));
+                
+                const deviceIds = selectedDevices.join(',');
+                const url = `${API_BASE}/export?site_id=${currentSiteId}&device_id=${deviceIds}&key=${currentMetric}&from=${fromTime.toISOString()}&to=${now.toISOString()}&format=${format}`;
+                
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Export failed: ${response.status}`);
+                }
+                
+                const blob = await response.blob();
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = `wattboard-${currentMetric}-${currentTimeRange}.${format}`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(downloadUrl);
+                document.body.removeChild(a);
+                
+                showError(`Data exported successfully as ${format.toUpperCase()}`);
+            } catch (error) {
+                console.error('Export failed:', error);
+                showError('Export failed. Please try again.');
+            }
+        }
+
+        // Initialize the application
+        init();
+    </script>
+</body>
+</html>

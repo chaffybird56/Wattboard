@@ -1,0 +1,88 @@
+version: "3.9"
+
+services:
+  # MQTT Broker
+  broker:
+    image: eclipse-mosquitto:2
+    container_name: wattboard-mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+    profiles:
+      - dev
+      - demo
+      - prod
+
+  # Backend API
+  api:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: wattboard-api
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./:/app
+    depends_on:
+      - broker
+    profiles:
+      - dev
+      - demo
+      - prod
+
+  # Frontend (Next.js)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: wattboard-frontend
+    restart: unless-stopped
+    ports:
+      - "8006:3000"
+    environment:
+      - NODE_ENV=production
+    profiles:
+      - dev
+      - demo
+      - prod
+
+  # Database (PostgreSQL with TimescaleDB extension)
+  db:
+    image: timescale/timescaledb:latest-pg15
+    container_name: wattboard-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: wattboard
+      POSTGRES_USER: wattboard
+      POSTGRES_PASSWORD: wattboard_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    profiles:
+      - demo
+      - prod
+
+  # Simulator for demo mode
+  simulator:
+    build:
+      context: .
+      dockerfile: Dockerfile.simulator
+    container_name: wattboard-simulator
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      - broker
+    profiles:
+      - demo
+
+volumes:
+  mosquitto_data:
+  mosquitto_log:
+  db_data:

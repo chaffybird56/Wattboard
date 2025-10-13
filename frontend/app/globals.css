@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  body {
+    @apply bg-bg text-text antialiased;
+    min-height: 100vh;
+  }
+  
+  * {
+    @apply border-card-border;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-card border border-card-border rounded-2xl shadow-card;
+  }
+  
+  .btn-primary {
+    @apply bg-accent text-bg font-medium px-4 py-2 rounded-lg hover:bg-accent/90 transition-colors;
+  }
+  
+  .btn-secondary {
+    @apply bg-card border border-card-border text-text font-medium px-4 py-2 rounded-lg hover:bg-card/80 transition-colors;
+  }
+  
+  .input {
+    @apply bg-card border border-card-border text-text px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/50;
+  }
+  
+  .chip {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-card border border-card-border hover:border-accent/50 transition-colors cursor-pointer;
+  }
+  
+  .chip-selected {
+    @apply bg-accent/20 border-accent text-accent;
+  }
+  
+  .kpi-card {
+    @apply card p-6 hover:translate-y-[-1px] transition-transform;
+  }
+  
+  .skeleton {
+    @apply animate-pulse bg-card-border rounded;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
