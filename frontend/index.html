@@ -495,31 +495,31 @@
                         </div>
                     </div>
                     
-                    <!-- Calculation Methods -->
-                    <div class="glass rounded-xl p-4">
-                        <h4 class="font-semibold text-white mb-3 flex items-center space-x-2">
-                            <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
-                            <span>Calculations</span>
-                        </h4>
-                        <div class="space-y-2 text-sm text-gray-300">
-                            <div class="flex justify-between items-center">
-                                <span class="text-white">Power</span>
-                                <span class="text-blue-400 text-xs">Direct</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-white">Energy</span>
-                                <span class="text-green-400 text-xs">kWh</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-white">Peak</span>
-                                <span class="text-yellow-400 text-xs">Max</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-white">Cost</span>
-                                <span class="text-purple-400 text-xs">$0.15</span>
-                            </div>
+                <!-- Live Calculations -->
+                <div class="glass rounded-xl p-4">
+                    <h4 class="font-semibold text-white mb-3 flex items-center space-x-2">
+                        <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
+                        <span>Live Calculations</span>
+                    </h4>
+                    <div class="space-y-2 text-sm text-gray-300">
+                        <div class="flex justify-between items-center">
+                            <span class="text-white" id="peakLabel">Current Peak</span>
+                            <span id="currentPeak" class="text-yellow-400 text-xs font-semibold">--</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-white" id="energyLabel">Daily Energy</span>
+                            <span id="dailyEnergy" class="text-green-400 text-xs font-semibold">--</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-white" id="efficiencyLabel">Stability</span>
+                            <span id="avgEfficiency" class="text-cyan-400 text-xs font-semibold">--%</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-white">Rate</span>
+                            <span class="text-purple-400 text-xs font-semibold">$0.28/kWh</span>
                         </div>
                     </div>
+                </div>
                     
                     <!-- Export Options -->
                     <div class="glass rounded-xl p-4">
@@ -896,6 +896,81 @@
             
             // Update chart subtitle
             document.getElementById('chartSubtitle').textContent = `Real-time ${metricConfig.name.toLowerCase()} monitoring`;
+            
+            // Update live calculations panel
+            updateLiveCalculations(data, metricConfig);
+        }
+        
+        function updateLiveCalculations(data, metricConfig) {
+            if (!data || !data.series || data.series.length === 0) return;
+            
+            const values = data.series.map(point => point.value);
+            const max = Math.max(...values);
+            const avg = values.reduce((a, b) => a + b, 0) / values.length;
+            
+            // Update labels based on metric type
+            const peakLabel = document.getElementById('peakLabel');
+            const energyLabel = document.getElementById('energyLabel');
+            const efficiencyLabel = document.getElementById('efficiencyLabel');
+            
+            if (metricConfig.key === 'power') {
+                if (peakLabel) peakLabel.textContent = 'Current Peak';
+                if (energyLabel) energyLabel.textContent = 'Daily Energy';
+                if (efficiencyLabel) efficiencyLabel.textContent = 'Efficiency';
+            } else if (metricConfig.key === 'temp') {
+                if (peakLabel) peakLabel.textContent = 'Max Temp';
+                if (energyLabel) energyLabel.textContent = 'Temp Range';
+                if (efficiencyLabel) efficiencyLabel.textContent = 'Stability';
+            } else {
+                if (peakLabel) peakLabel.textContent = 'Current Peak';
+                if (energyLabel) energyLabel.textContent = 'Average';
+                if (efficiencyLabel) efficiencyLabel.textContent = 'Stability';
+            }
+            
+            // Update Current Peak (highest value in current time window)
+            const currentPeakElement = document.getElementById('currentPeak');
+            if (currentPeakElement) {
+                if (metricConfig.key === 'power') {
+                    currentPeakElement.textContent = `${max.toFixed(0)} W`;
+                } else if (metricConfig.key === 'temp') {
+                    currentPeakElement.textContent = `${max.toFixed(1)}°C`;
+                } else {
+                    currentPeakElement.textContent = `${max.toFixed(1)} ${metricConfig.unit}`;
+                }
+            }
+            
+            // Update Daily Energy (estimated kWh for 24h based on current avg)
+            const dailyEnergyElement = document.getElementById('dailyEnergy');
+            if (dailyEnergyElement) {
+                if (metricConfig.key === 'power') {
+                    const dailyKwh = (avg * 24) / 1000; // Convert W to kWh for 24h
+                    dailyEnergyElement.textContent = `${dailyKwh.toFixed(1)} kWh`;
+                } else if (metricConfig.key === 'temp') {
+                    const tempRange = max - Math.min(...values);
+                    dailyEnergyElement.textContent = `${tempRange.toFixed(1)}°C`;
+                } else {
+                    dailyEnergyElement.textContent = `${avg.toFixed(1)} ${metricConfig.unit}`;
+                }
+            }
+            
+            // Update Average Efficiency (stability indicator)
+            const avgEfficiencyElement = document.getElementById('avgEfficiency');
+            if (avgEfficiencyElement) {
+                // Calculate efficiency as inverse of coefficient of variation (lower variance = higher efficiency)
+                const variance = values.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / values.length;
+                const stdDev = Math.sqrt(variance);
+                const coefficientOfVariation = stdDev / avg;
+                const efficiency = Math.max(0, Math.min(100, (1 - coefficientOfVariation) * 100));
+                
+                if (metricConfig.key === 'power') {
+                    avgEfficiencyElement.textContent = `${efficiency.toFixed(0)}%`;
+                } else if (metricConfig.key === 'temp') {
+                    // For temperature, show stability as a percentage
+                    avgEfficiencyElement.textContent = `${efficiency.toFixed(0)}%`;
+                } else {
+                    avgEfficiencyElement.textContent = `${efficiency.toFixed(0)}%`;
+                }
+            }
         }
 
         // Get metric configuration
@@ -936,7 +1011,7 @@
             document.getElementById('currentPower').textContent = Math.round(current);
             document.getElementById('dailyEnergy').textContent = (avg * 24 / 1000).toFixed(1);
             document.getElementById('peakToday').textContent = Math.round(peak);
-            document.getElementById('costEst').textContent = `$${((avg * 24 / 1000) * 0.15).toFixed(2)}`;
+            document.getElementById('costEst').textContent = `$${((avg * 24 / 1000) * 0.28).toFixed(2)}`;
         }
 
         // Update data sources in sources panel

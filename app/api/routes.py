@@ -67,7 +67,7 @@ def create_device():
 def get_metrics():
     site_id = request.args.get("site_id", type=int)
     device_ids = request.args.getlist("device_id", type=int)
-    key = request.args.get("key", "power")
+    key = request.args.get("key") or request.args.get("metric", "power")
     from_ts = request.args.get("from")
     to_ts = request.args.get("to")
     resolution = request.args.get("res", "raw")  # raw, 1m, 15m

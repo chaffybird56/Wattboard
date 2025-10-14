@@ -1,6 +1,31 @@
 # ⚡ Wattboard - Multi-Site Energy Monitoring Dashboard
 
+**Advanced multi-site energy monitoring dashboard with real-time visualization, smart alerts, and comprehensive analytics. Built for homes, labs, and industrial facilities.**
+
 A comprehensive energy monitoring system that supports multiple sites and arbitrary device types. Built with modern web technologies and designed for scalability from home energy monitoring to industrial applications.
+
+[![Python](https://img.shields.io/badge/Python-35.5%25-blue.svg)](https://python.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-33.7%25-blue.svg)](https://typescriptlang.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://docker.com)
+
+## 📸 Screenshots
+
+### Main Dashboard - Power Monitoring
+![Power Dashboard](SCR-20251014-niik.png)
+*Real-time power monitoring with live calculations, dynamic charts, and comprehensive analytics*
+
+### Temperature Monitoring
+![Temperature Dashboard](SCR-20251014-nhdo.png)
+*Temperature monitoring with stability indicators and range analysis*
+
+### Multi-Site Overview
+![Multi-Site View](SCR-20251014-nhgq.png)
+*Multi-site energy monitoring with site switching and device management*
+
+### Data Sources & Analytics
+![Analytics Panel](SCR-20251014-nhjf.png)
+*Advanced analytics panel with live calculations, export options, and system information*
 
 ## ✨ Features
 
@@ -97,26 +122,36 @@ docker compose --profile prod up --build
 
 ## 🔧 Configuration
 
-### Environment Variables
+<details>
+<summary><strong>📋 Environment Variables</strong></summary>
+
 ```bash
-# Database
+# Database Configuration
 DATABASE_URL=sqlite:///energy.db  # or postgresql://...
 
-# MQTT
+# MQTT Broker Settings
 MQTT_BROKER_HOST=broker
 MQTT_BROKER_PORT=1883
 MQTT_TOPICS=sensor/+/+/reading
 
-# Email (for alerts)
+# Email Configuration (for alerts)
 SMTP_HOST=smtp.gmail.com
 SMTP_USER=your-email@gmail.com
 SMTP_PASSWORD=your-app-password
 
 # Demo Mode
 DEMO_MODE_ENABLED=true
+
+# Application Settings
+FLASK_ENV=development
+SECRET_KEY=your-secret-key-here
 ```
 
-### MQTT Message Format
+</details>
+
+<details>
+<summary><strong>📡 MQTT Message Format</strong></summary>
+
 ```json
 {
   "ts": "2025-01-15T12:00:00Z",
@@ -128,6 +163,36 @@ DEMO_MODE_ENABLED=true
   "voltage": 240.1
 }
 ```
+
+**Supported Device Types:**
+- `power` - Power consumption in Watts
+- `voltage` - Voltage readings in Volts
+- `temp` - Temperature in Celsius
+- `aqi` - Air Quality Index
+- `humidity` - Humidity percentage
+
+</details>
+
+<details>
+<summary><strong>🐳 Docker Compose Profiles</strong></summary>
+
+```yaml
+# Development Profile
+docker compose --profile dev up --build
+
+# Demo Profile (Recommended for testing)
+docker compose --profile demo up --build
+
+# Production Profile
+docker compose --profile prod up --build
+```
+
+**Profile Differences:**
+- **dev**: Hot reload, SQLite, debug mode
+- **demo**: Simulator data, sample datasets, quick start
+- **prod**: PostgreSQL, TimescaleDB, optimized performance
+
+</details>
 
 ## 📊 Data Model
 
@@ -233,3 +298,16 @@ MIT License - see LICENSE file for details
 ---
 
 **Built with ❤️ for the energy monitoring community**
+
+## 🏷️ Repository Topics
+
+`python` `mqtt` `flask` `energy-monitor` `power-consumption` `iot-dashboard`
+
+## 📊 Repository Stats
+
+- **Languages**: Python (35.5%), TypeScript (33.7%), HTML (27.2%), JavaScript (1.7%), CSS (1.1%)
+- **License**: MIT
+- **Stars**: 0 ⭐
+- **Forks**: 0 🍴
+- **Issues**: 0 🐛
+- **Pull Requests**: 0 🔄
