@@ -15,17 +15,18 @@ A comprehensive energy monitoring system that supports multiple sites and arbitr
 ![Power Dashboard](SCR-20251014-niik.png)
 *Real-time power monitoring with live calculations, dynamic charts, and comprehensive analytics*
 
-### Temperature Monitoring
-![Temperature Dashboard](SCR-20251014-nhdo.png)
-*Temperature monitoring with stability indicators and range analysis*
-
-### Multi-Site Overview
-![Multi-Site View](SCR-20251014-nhgq.png)
-*Multi-site energy monitoring with site switching and device management*
-
 ### Data Sources & Analytics
 ![Analytics Panel](SCR-20251014-nhjf.png)
 *Advanced analytics panel with live calculations, export options, and system information*
+
+### Voltage Monitoring
+![Temperature Dashboard](SCR-20251014-nhdo.png)
+*Multi-site energy monitoring with site switching and device management*
+
+### Temperature Overview
+![Multi-Site View](SCR-20251014-nhgq.png)
+*Temperature monitoring with stability indicators and range analysis*
+
 
 ## ✨ Features
 
