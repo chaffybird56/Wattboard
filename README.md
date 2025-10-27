@@ -304,11 +304,3 @@ MIT License - see LICENSE file for details
 
 `python` `mqtt` `flask` `energy-monitor` `power-consumption` `iot-dashboard`
 
-## 📊 Repository Stats
-
-- **Languages**: Python (35.5%), TypeScript (33.7%), HTML (27.2%), JavaScript (1.7%), CSS (1.1%)
-- **License**: MIT
-- **Stars**: 0 ⭐
-- **Forks**: 0 🍴
-- **Issues**: 0 🐛
-- **Pull Requests**: 0 🔄
