@@ -1,4 +1,4 @@
-# ⚡ Wattboard - Multi-Site Energy Monitoring Dashboard
+# Wattboard - Multi-Site Energy Monitoring Dashboard
 
 **Advanced multi-site energy monitoring dashboard with real-time visualization, smart alerts, and comprehensive analytics. Built for homes, labs, and industrial facilities.**
 
@@ -9,7 +9,7 @@ A comprehensive energy monitoring system that supports multiple sites and arbitr
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://docker.com)
 
-## 📸 Screenshots
+## Screenshots
 
 ### Main Dashboard - Power Monitoring
 ![Power Dashboard](SCR-20251014-niik.png)
@@ -27,58 +27,58 @@ A comprehensive energy monitoring system that supports multiple sites and arbitr
 ![Analytics Panel](SCR-20251014-nhjf.png)
 *Advanced analytics panel with live calculations, export options, and system information*
 
-## ✨ Features
+## Features
 
-### 🏢 Multi-Site & Device Abstraction
+### Multi-Site & Device Abstraction
 - **Multiple Sites**: Support for Home, Lab, Office, and any custom sites
 - **Device Types**: Power meters, voltage sensors, temperature, AQI, humidity, and more
 - **Site Switcher**: Easy navigation between sites with persistent URL state
 - **Device Filters**: Real-time filtering by device type and status
 
-### 📊 Real-Time Visualization
+### Real-Time Visualization
 - **Live Timeline**: Interactive charts with event ribbons for spikes and sags
 - **KPI Cards**: Current power, daily energy, peak values, and cost estimates
 - **Event Detection**: Automatic detection of power spikes and voltage sags
 - **Responsive Design**: Works on desktop, tablet, and mobile devices
 
-### 🚨 Smart Alerting System
+### Smart Alerting System
 - **3 Preset Rules**: High draw, over-temperature, and no-data alerts
 - **Custom Rules**: Create threshold, time-window, and no-data alerts
 - **Multiple Delivery**: Email and webhook notifications
 - **Snooze Functionality**: Temporarily disable alerts with smart snoozing
 
-### 📈 Data Management
+### Data Management
 - **CSV/Parquet Import**: Easy data import with column mapping
 - **Demo Mode**: Deterministic simulator for instant testing
 - **Export Options**: PNG screenshots and CSV data exports
 - **Shareable Links**: Permalink URLs that preserve view state
 
-### 🎨 Modern UI/UX
+### Modern UI/UX
 - **Dark Theme**: Beautiful dark interface with design tokens
 - **Smooth Animations**: 60fps charts and smooth transitions
 - **Accessibility**: WCAG compliant with proper ARIA labels
 - **Mobile Responsive**: Optimized for all screen sizes
 
-## 🏗️ Architecture
+## Architecture
 
 ```
-┌─────────────────┐    ┌──────────────┐    ┌─────────────────┐
-│   MQTT Devices  │───▶│   Mosquitto  │───▶│   Flask API     │
-│   (Real/Sim)    │    │   Broker     │    │   (Python)      │
-└─────────────────┘    └──────────────┘    └─────────────────┘
-                                                      │
-                       ┌─────────────────┐            │
-                       │   Next.js UI    │◀────────── ┘
-                       │   (React/TS)    │
-                       └─────────────────┘
-                                │
-                       ┌─────────────────┐
-                       │   PostgreSQL    │
-                       │   + TimescaleDB │
-                       └─────────────────┘
+┌─────────────────┐ ┌──────────────┐ ┌─────────────────┐
+│ MQTT Devices │───▶│ Mosquitto │───▶│ Flask API │
+│ (Real/Sim) │ │ Broker │ │ (Python) │
+└─────────────────┘ └──────────────┘ └─────────────────┘
+ │
+ ┌─────────────────┐ │
+ │ Next.js UI │◀────────── ┘
+ │ (React/TS) │
+ └─────────────────┘
+ │
+ ┌─────────────────┐
+ │ PostgreSQL │
+ │ + TimescaleDB │
+ └─────────────────┘
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Option 1: Demo Mode (Recommended)
 ```bash
@@ -114,20 +114,20 @@ docker compose --profile prod up --build
 # Optimized for production workloads
 ```
 
-## 📋 Docker Compose Profiles
+## Docker Compose Profiles
 
 - **`dev`**: Development with hot reload and SQLite
 - **`demo`**: Demo mode with simulator and sample data
 - **`prod`**: Production with PostgreSQL and TimescaleDB
 
-## 🔧 Configuration
+## Configuration
 
 <details>
-<summary><strong>📋 Environment Variables</strong></summary>
+<summary><strong>Environment Variables</strong></summary>
 
 ```bash
 # Database Configuration
-DATABASE_URL=sqlite:///energy.db  # or postgresql://...
+DATABASE_URL=sqlite:///energy.db # or postgresql://...
 
 # MQTT Broker Settings
 MQTT_BROKER_HOST=broker
@@ -150,17 +150,17 @@ SECRET_KEY=your-secret-key-here
 </details>
 
 <details>
-<summary><strong>📡 MQTT Message Format</strong></summary>
+<summary><strong>MQTT Message Format</strong></summary>
 
 ```json
 {
-  "ts": "2025-01-15T12:00:00Z",
-  "site": "Home",
-  "device_name": "Main Meter",
-  "type": "power",
-  "unit": "W",
-  "power": 1200.5,
-  "voltage": 240.1
+ "ts": "2025-01-15T12:00:00Z",
+ "site": "Home",
+ "device_name": "Main Meter",
+ "type": "power",
+ "unit": "W",
+ "power": 1200.5,
+ "voltage": 240.1
 }
 ```
 
@@ -174,7 +174,7 @@ SECRET_KEY=your-secret-key-here
 </details>
 
 <details>
-<summary><strong>🐳 Docker Compose Profiles</strong></summary>
+<summary><strong> Docker Compose Profiles</strong></summary>
 
 ```yaml
 # Development Profile
@@ -194,7 +194,7 @@ docker compose --profile prod up --build
 
 </details>
 
-## 📊 Data Model
+## Data Model
 
 ### Sites
 - Multiple sites with timezone support
@@ -220,7 +220,7 @@ docker compose --profile prod up --build
 - Multiple notification channels
 - Snooze functionality
 
-## 🎯 Use Cases
+## Use Cases
 
 ### Home Energy Monitoring
 - Track solar panel output and consumption
@@ -237,7 +237,7 @@ docker compose --profile prod up --build
 - Occupancy-based controls
 - Energy efficiency tracking
 
-## 🧪 Testing
+## Testing
 
 ```bash
 # Backend tests
@@ -251,21 +251,21 @@ docker compose --profile demo up --build
 # Run automated tests against demo environment
 ```
 
-## 📈 Performance
+## Performance
 
 - **API Response Time**: <150ms for 24h queries with ≤5 devices
 - **Chart Rendering**: 60fps with smooth animations
 - **Data Ingestion**: Handles 1000+ metrics/second
 - **Memory Usage**: <100MB for typical workloads
 
-## 🔒 Security
+## Security
 
 - Input validation and sanitization
 - SQL injection prevention
 - CORS configuration
 - Environment-based secrets
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -273,7 +273,7 @@ docker compose --profile demo up --build
 4. Add tests
 5. Submit a pull request
 
-## 📄 License
+## License
 
 MIT License - see LICENSE file for details
 
@@ -284,7 +284,7 @@ MIT License - see LICENSE file for details
 - **Discussions**: GitHub Discussions for questions
 - **Email**: support@wattboard.dev
 
-## 🔮 Roadmap
+## Roadmap
 
 - [ ] WebSocket real-time updates
 - [ ] Advanced analytics and ML
@@ -297,17 +297,17 @@ MIT License - see LICENSE file for details
 
 ---
 
-**Built with ❤️ for the energy monitoring community**
+**Built with for the energy monitoring community**
 
-## 🏷️ Repository Topics
+## Repository Topics
 
 `python` `mqtt` `flask` `energy-monitor` `power-consumption` `iot-dashboard`
 
-## 📊 Repository Stats
+## Repository Stats
 
 - **Languages**: Python (35.5%), TypeScript (33.7%), HTML (27.2%), JavaScript (1.7%), CSS (1.1%)
 - **License**: MIT
 - **Stars**: 0 ⭐
-- **Forks**: 0 🍴
-- **Issues**: 0 🐛
-- **Pull Requests**: 0 🔄
+- **Forks**: 0
+- **Issues**: 0
+- **Pull Requests**: 0
